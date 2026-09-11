@@ -1,0 +1,1 @@
+export { useGetSpecializationByIdQuery, useGetSpecializationsListQuery } from './api/specializationApi'
