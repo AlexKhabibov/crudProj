@@ -1,5 +1,7 @@
-import { AdminLayout } from "@/app/layouts";
 import { createBrowserRouter } from "react-router-dom";
+import { AdminLayout } from "@/app/layouts";
+import { SpecializationsListPage } from "@/pages/admin/specializations-list";
+import { SpecializationDetailsPage } from "@/pages/admin/specialization-details";
 
 export const routerConfig = createBrowserRouter([
     {
@@ -8,15 +10,15 @@ export const routerConfig = createBrowserRouter([
         children: [
             {
                 index: true,
-                element: <div>Admin</div>,
+                element: <div>Admin route</div>,
             },
             {
                 path: "specializations",
-                element: <div>Specializations</div>,
+                element: <SpecializationsListPage />,
             },
             {
                 path: "specializations/:id",
-                element: <div>Specialization detail</div>,
+                element: <SpecializationDetailsPage />,
             },
         ],
     },

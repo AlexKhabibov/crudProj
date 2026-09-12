@@ -1,1 +1,7 @@
-export { useGetSpecializationByIdQuery, useGetSpecializationsListQuery } from './api/specializationApi'
+export {
+    useGetSpecializationByIdQuery,
+    useGetSpecializationsListQuery,
+    useCreateSpecializationMutation,
+    useUpdateSpecializationByIdMutation,
+    useDeleteSpecializationByIdMutation,
+} from './api/specializationApi'

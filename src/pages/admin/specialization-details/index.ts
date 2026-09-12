@@ -1,0 +1,1 @@
+export { SpecializationDetailsPage } from './ui/SpecializationDetailsPage'
