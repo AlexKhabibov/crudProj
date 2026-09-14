@@ -1,6 +1,6 @@
 import { useGetSkillsListQuery } from "@/entities/skill";
 import { useGetSpecializationsListQuery } from "@/entities/specialization";
-import { Link } from "react-router-dom";
+import { SpecializationsTable } from "@/widgets/specialization-table";
 
 export function SpecializationsListPage() {
     const {
@@ -12,17 +12,25 @@ export function SpecializationsListPage() {
         limit: 10,
     });
 
+    const specializationIds =
+        specializationsData?.data.map(
+            (specialization) => specialization.id
+        ) ?? [];
+
     const {
         data: skillsData,
         isLoading: skillsLoading,
         error: skillsError,
-    } = useGetSkillsListQuery({
-        page: 1,
-        limit: 10,
-    });
-
-    console.log("specializations:", specializationsData);
-    console.log("skills:", skillsData);
+    } = useGetSkillsListQuery(
+        {
+            page: 1,
+            limit: 10,
+            specializations: specializationIds.join(","),
+        },
+        {
+            skip: specializationIds.length === 0,
+        }
+    );
 
     if (specializationsLoading || skillsLoading) {
         return <p>Загрузка...</p>;
@@ -36,17 +44,10 @@ export function SpecializationsListPage() {
         <>
             <h1>Список специализаций</h1>
 
-            <ul>
-                {specializationsData?.data.map((specialization) => (
-                    <li key={specialization.id}>
-                        <Link
-                            to={`/admin/specializations/${specialization.id}`}
-                        >
-                            {specialization.title}
-                        </Link>
-                    </li>
-                ))}
-            </ul>
+            <SpecializationsTable
+                specializations={specializationsData?.data ?? []}
+                skills={skillsData?.data ?? []}
+            />
         </>
     );
 }
