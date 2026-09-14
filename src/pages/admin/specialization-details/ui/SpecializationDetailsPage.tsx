@@ -10,11 +10,6 @@ export function SpecializationDetailsPage() {
     const { data, isLoading, error } =
         useGetSpecializationByIdQuery(specializationId);
 
-    console.log("id:", specializationId);
-    console.log("data:", data);
-    console.log("loading:", isLoading);
-    console.log("error:", error);
-
     if (error) {
         return <p>Ошибка</p>;
     }
@@ -24,9 +19,10 @@ export function SpecializationDetailsPage() {
     }
 
     return (
-        <div>
-            <p>Детализация конкретной специализации по ID {id}</p>
-            <p>{data?.title}</p>
-        </div>
+        <>
+            <h1>Детализация конкретной специализации по ID {id}</h1>
+
+            <p>Название - {data?.title}</p>
+        </>
     );
 }

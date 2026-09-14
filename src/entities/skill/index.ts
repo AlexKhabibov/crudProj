@@ -1,0 +1,1 @@
+export { useGetSkillByIdQuery, useGetSkillsListQuery } from './api/skillApi'
