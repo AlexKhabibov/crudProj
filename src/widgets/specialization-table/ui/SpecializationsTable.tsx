@@ -1,54 +1,72 @@
 import type { Skill } from "@/entities/skill/model/types";
 import type { Specialization } from "@/entities/specialization/model/types";
+import {
+    createColumnHelper,
+    flexRender,
+    tableFeatures,
+    useTable,
+} from "@tanstack/react-table";
 
 interface SpecializationsTableProps {
     specializations: Specialization[];
     skills: Skill[];
 }
 
+const features = tableFeatures({});
+
+const columnHelper = createColumnHelper<
+    typeof features,
+    Specialization
+>();
+
+const columns = columnHelper.columns([
+    columnHelper.accessor("title", {
+        header: "Название",
+        cell: (info) => info.getValue(),
+    }),
+
+    columnHelper.accessor("description", {
+        header: "Описание",
+        cell: (info) => info.getValue(),
+    }),
+]);
+
 export function SpecializationsTable({
     specializations,
     skills,
 }: SpecializationsTableProps) {
+    const table = useTable({
+        features,
+        data: specializations,
+        columns,
+    });
+
     return (
         <table>
             <thead>
-                <tr>
-                    <th>Выбор</th>
-                    <th>Изображение</th>
-                    <th>Название</th>
-                    <th>Описание</th>
-                    <th>Навыки</th>
-                    <th>Опции</th>
-                </tr>
+                {table.getHeaderGroups().map((headerGroup) => (
+                    <tr key={headerGroup.id}>
+                        {headerGroup.headers.map((header) => (
+                            <th key={header.id}>
+                                {flexRender(
+                                    header.column.columnDef.header,
+                                    header.getContext()
+                                )}
+                            </th>
+                        ))}
+                    </tr>
+                ))}
             </thead>
-
             <tbody>
-                {specializations.map((specialization) => {
-                    const specializationSkills = skills.filter((skill) =>
-                        skill.specializations.some(
-                            (skillSpecialization) =>
-                                skillSpecialization.id === specialization.id
-                        )
-                    );
-
-                    return (
-                        <tr key={specialization.id}>
-                            <td>checkbox</td>
-                            <td>{specialization.imageSrc}</td>
-                            <td>{specialization.title}</td>
-                            <td>{specialization.description}</td>
-                            <td>
-                                {specializationSkills.map((skill) => (
-                                    <div key={skill.id}>
-                                        {skill.title}
-                                    </div>
-                                ))}
+                {table.getRowModel().rows.map((row) => (
+                    <tr key={row.id}>
+                        {row.getAllCells().map((cell) => (
+                            <td key={cell.id}>
+                                {cell.getValue() as React.ReactNode}
                             </td>
-                            <td>options</td>
-                        </tr>
-                    );
-                })}
+                        ))}
+                    </tr>
+                ))}
             </tbody>
         </table>
     );
