@@ -97,6 +97,54 @@ export const specializationApi = baseApi.injectEndpoints({
                 method: "DELETE",
             }),
         }),
+
+        // getAllSpecializations: builder.query<Specialization[], void>({
+        //     async queryFn(_arg, _queryApi, _extraOptions, baseQuery) {
+        //         const firstPage = await baseQuery({
+        //             url: "/specializations",
+        //             params: {
+        //                 page: 1,
+        //                 limit: 10,
+        //             },
+        //         });
+
+        //         if (firstPage.error) {
+        //             return { error: firstPage.error };
+        //         }
+
+        //         const firstResponse =
+        //             firstPage.data as SpecializationsListResponse;
+
+        //         const allSpecializations = [...firstResponse.data];
+
+        //         const totalPages = Math.ceil(
+        //             firstResponse.total / firstResponse.limit
+        //         );
+
+        //         for (let page = 2; page <= totalPages; page++) {
+        //             const response = await baseQuery({
+        //                 url: "/specializations",
+        //                 params: {
+        //                     page,
+        //                     limit: firstResponse.limit,
+        //                 },
+        //             });
+
+        //             if (response.error) {
+        //                 return { error: response.error };
+        //             }
+
+        //             const pageResponse =
+        //                 response.data as SpecializationsListResponse;
+
+        //             allSpecializations.push(...pageResponse.data);
+        //         }
+
+        //         return {
+        //             data: allSpecializations,
+        //         };
+        //     },
+        // }),
     }),
 });
 

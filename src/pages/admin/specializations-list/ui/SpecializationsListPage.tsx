@@ -1,15 +1,23 @@
+import { useState } from "react";
 import { useGetSkillsListQuery } from "@/entities/skill";
 import { useGetSpecializationsListQuery } from "@/entities/specialization";
+import { SearchSpecializations } from "@/features/search-specialization";
+import { Pagination } from "@/shared/ui";
 import { SpecializationsTable } from "@/widgets/specialization-table";
 
 export function SpecializationsListPage() {
+    const [page, setPage] = useState(1);
+    const [limit] = useState(10);
+    const [search, setSearch] = useState("");
+
     const {
         data: specializationsData,
         isLoading: specializationsLoading,
         error: specializationsError,
     } = useGetSpecializationsListQuery({
-        page: 1,
-        limit: 10,
+        page,
+        limit,
+        title: search,
     });
 
     const specializationIds =
@@ -44,9 +52,23 @@ export function SpecializationsListPage() {
         <>
             <h1>Список специализаций</h1>
 
+            <SearchSpecializations
+                onSearch={(value) => {
+                    setSearch(value);
+                    setPage(1);
+                }}
+            />
+
             <SpecializationsTable
                 specializations={specializationsData?.data ?? []}
                 skills={skillsData?.data ?? []}
+            />
+
+            <Pagination
+                currentPage={page}
+                totalItems={specializationsData?.total ?? 0}
+                itemsPerPage={limit}
+                onPageChange={setPage}
             />
         </>
     );

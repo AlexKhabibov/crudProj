@@ -1,0 +1,1 @@
+export { SearchSpecializations } from './ui/SearchSpecializations'
