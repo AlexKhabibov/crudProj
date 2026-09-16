@@ -1,3 +1,9 @@
+import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import type {
+    OnChangeFn,
+    RowSelectionState,
+} from "@tanstack/react-table";
 import type { Skill } from "@/entities/skill/model/types";
 import type { Specialization } from "@/entities/specialization/model/types";
 import {
@@ -13,6 +19,8 @@ import {
 interface SpecializationsTableProps {
     specializations: Specialization[];
     skills: Skill[];
+    rowSelection: RowSelectionState;
+    onRowSelectionChange: OnChangeFn<RowSelectionState>;
 }
 
 const features = tableFeatures({
@@ -32,97 +40,167 @@ const columnHelper = createColumnHelper<
 export function SpecializationsTable({
     specializations,
     skills,
+    rowSelection,
+    onRowSelectionChange,
 }: SpecializationsTableProps) {
-    const columns = columnHelper.columns([
-        columnHelper.display({
-            id: "select",
-            header: ({ table }) => (
-                <input
-                    type="checkbox"
-                    checked={table.getIsAllRowsSelected()}
-                    onChange={table.getToggleAllRowsSelectedHandler()}
-                />
-            ),
-            cell: ({ row }) => (
-                <input
-                    type="checkbox"
-                    checked={row.getIsSelected()}
-                    disabled={!row.getCanSelect()}
-                    onChange={row.getToggleSelectedHandler()}
-                />
-            ),
-        }),
+    const navigate = useNavigate();
 
-        columnHelper.display({
-            id: "image",
-            header: "Изображение",
-            cell: ({ row }) => (
-                <img
-                    src={row.original.imageSrc}
-                    alt={row.original.title}
-                    width={50}
-                    height={50}
-                />
-            ),
-        }),
+    const [openMenuId, setOpenMenuId] = useState<number | null>(
+        null
+    );
 
-        columnHelper.accessor("title", {
-            header: ({ column }) => (
-                <button
-                    type="button"
-                    onClick={column.getToggleSortingHandler()}
-                >
-                    Название
-                    {column.getIsSorted() === "asc" && " ↑"}
-                    {column.getIsSorted() === "desc" && " ↓"}
-                </button>
-            ),
-            sortFn: "text",
-        }),
+    const columns = useMemo(
+        () =>
+            columnHelper.columns([
+                columnHelper.display({
+                    id: "select",
 
-        columnHelper.accessor("description", {
-            header: "Описание",
-            enableSorting: false,
-        }),
+                    header: ({ table }) => (
+                        <input
+                            type="checkbox"
+                            checked={table.getIsAllPageRowsSelected()}
+                            ref={(element) => {
+                                if (element) {
+                                    element.indeterminate =
+                                        table.getIsSomePageRowsSelected() &&
+                                        !table.getIsAllPageRowsSelected();
+                                }
+                            }}
+                            onChange={table.getToggleAllPageRowsSelectedHandler()}
+                        />
+                    ),
 
-        columnHelper.display({
-            id: "skills",
-            header: "Навыки",
-            cell: ({ row }) => {
-                const specializationSkills = skills.filter((skill) =>
-                    skill.specializations.some(
-                        (skillSpecialization) =>
-                            skillSpecialization.id === row.original.id
-                    )
-                );
+                    cell: ({ row }) => (
+                        <input
+                            type="checkbox"
+                            checked={row.getIsSelected()}
+                            disabled={!row.getCanSelect()}
+                            onChange={row.getToggleSelectedHandler()}
+                        />
+                    ),
+                }),
 
-                if (specializationSkills.length === 0) {
-                    return "—";
-                }
+                columnHelper.display({
+                    id: "image",
 
-                return specializationSkills
-                    .map((skill) => skill.title)
-                    .join(", ");
-            },
-        }),
+                    header: "Изображение",
 
-        columnHelper.display({
-            id: "options",
-            header: "Опции",
-            cell: () => (
-                <button type="button">
-                    ⋯
-                </button>
-            ),
-        }),
-    ]);
+                    cell: ({ row }) => (
+                        <img
+                            src={row.original.imageSrc}
+                            alt={row.original.title}
+                            width={50}
+                            height={50}
+                        />
+                    ),
+                }),
+
+                columnHelper.accessor("title", {
+                    header: ({ column }) => (
+                        <button
+                            type="button"
+                            onClick={column.getToggleSortingHandler()}
+                        >
+                            Название{" "}
+                            {column.getIsSorted() === "asc" && "↑"}
+                            {column.getIsSorted() === "desc" && "↓"}
+                        </button>
+                    ),
+
+                    cell: (info) => info.getValue(),
+
+                    sortFn: "text",
+                }),
+
+                columnHelper.accessor("description", {
+                    header: "Описание",
+                    cell: (info) => info.getValue(),
+                    enableSorting: false,
+                }),
+
+                columnHelper.display({
+                    id: "skills",
+
+                    header: "Навыки",
+
+                    cell: ({ row }) => {
+                        const specializationId = row.original.id;
+
+                        return skills
+                            .filter((skill) =>
+                                skill.specializations.some(
+                                    (skillSpecialization) =>
+                                        skillSpecialization.id ===
+                                        specializationId
+                                )
+                            )
+                            .map((skill) => skill.title)
+                            .join(", ");
+                    },
+                }),
+
+                columnHelper.display({
+                    id: "options",
+
+                    header: "Опции",
+
+                    cell: ({ row }) => {
+                        const specializationId = row.original.id;
+                        const isOpen =
+                            openMenuId === specializationId;
+
+                        return (
+                            <div>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setOpenMenuId(
+                                            isOpen
+                                                ? null
+                                                : specializationId
+                                        );
+                                    }}
+                                >
+                                    ⋮
+                                </button>
+
+                                {isOpen && (
+                                    <div>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                navigate(
+                                                    `/admin/specializations/${specializationId}`
+                                                );
+                                            }}
+                                        >
+                                            Редактировать
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    },
+                }),
+            ]),
+        [skills, navigate, openMenuId]
+    );
 
     const table = useTable({
         features,
         data: specializations,
         columns,
+
         getRowId: (row) => String(row.id),
+
         enableRowSelection: true,
+
+        state: {
+            rowSelection,
+        },
+
+        onRowSelectionChange,
+
         enableSortingRemoval: false,
     });
 
@@ -135,7 +213,11 @@ export function SpecializationsTable({
                             <th key={header.id}>
                                 {header.isPlaceholder
                                     ? null
-                                    : <table.FlexRender header={header} />}
+                                    : (
+                                        <table.FlexRender
+                                            header={header}
+                                        />
+                                    )}
                             </th>
                         ))}
                     </tr>
@@ -147,7 +229,9 @@ export function SpecializationsTable({
                     <tr key={row.id}>
                         {row.getAllCells().map((cell) => (
                             <td key={cell.id}>
-                                <table.FlexRender cell={cell} />
+                                <table.FlexRender
+                                    cell={cell}
+                                />
                             </td>
                         ))}
                     </tr>
