@@ -9,7 +9,7 @@ export interface Specialization {
     createdBy: {
         id: string;
         username: string;
-    };
+    } | null;
 }
 
 export interface SpecializationDetails extends Specialization {

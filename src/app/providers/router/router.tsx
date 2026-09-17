@@ -1,7 +1,7 @@
 import { createBrowserRouter } from "react-router-dom";
 import { AdminLayout } from "@/app/layouts";
-import { SpecializationsListPage } from "@/pages/admin/specializations-list";
-import { SpecializationDetailsPage } from "@/pages/admin/specialization-details";
+import { SpecializationsListPage } from "@/pages/admin/specialization/specializations-list";
+import { SpecializationDetailsPage } from "@/pages/admin/specialization/specialization-details";
 
 export const routerConfig = createBrowserRouter([
     {
@@ -17,8 +17,12 @@ export const routerConfig = createBrowserRouter([
                 element: <SpecializationsListPage />,
             },
             {
+                path: "specializations/create",
+                element: <SpecializationDetailsPage mode="create" />,
+            },
+            {
                 path: "specializations/:id",
-                element: <SpecializationDetailsPage />,
+                element: <SpecializationDetailsPage mode="view" />,
             },
         ],
     },
