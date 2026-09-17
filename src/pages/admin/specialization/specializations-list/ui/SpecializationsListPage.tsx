@@ -8,8 +8,11 @@ import {
 import { SearchSpecializations } from "@/features/search-specialization";
 import { Pagination } from "@/shared/ui";
 import { SpecializationsTable } from "@/widgets/specialization-table";
+import { useNavigate } from "react-router-dom";
 
 export function SpecializationsListPage() {
+    const navigate = useNavigate();
+
     const [page, setPage] = useState(1);
     const [search, setSearch] = useState("");
     const [rowSelection, setRowSelection] =
@@ -112,7 +115,12 @@ export function SpecializationsListPage() {
                         {isDeleting ? "Удаление..." : "Удалить"}
                     </button>
 
-                    <button type="button">
+                    <button
+                        type="button"
+                        onClick={() =>
+                            navigate("/admin/specializations/create")
+                        }
+                    >
                         Добавить
                     </button>
                 </div>

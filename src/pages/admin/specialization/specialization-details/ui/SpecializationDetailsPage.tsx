@@ -2,18 +2,27 @@ import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useGetSkillsListQuery } from "@/entities/skill";
 import {
+    useCreateSpecializationMutation,
     useDeleteSpecializationByIdMutation,
     useGetSpecializationByIdQuery,
+    useUpdateSpecializationByIdMutation,
 } from "@/entities/specialization";
 import { SpecializationCreateFormPage } from "../../specialization-create";
+import { fileToBase64 } from "@/shared/lib/file/toBase64";
 
-type SpecializationPageProps = {
+type SpecializationDetailsPageProps = {
     mode: "view" | "create";
 };
 
+interface SpecializationFormValues {
+    title: string;
+    description: string;
+    image: File | null;
+}
+
 export function SpecializationDetailsPage({
     mode,
-}: SpecializationPageProps) {
+}: SpecializationDetailsPageProps) {
     const navigate = useNavigate();
     const { id } = useParams();
 
@@ -48,25 +57,70 @@ export function SpecializationDetailsPage({
         }
     );
 
+    const [createSpecialization, { isLoading: isCreating }] =
+        useCreateSpecializationMutation();
+
+    const [updateSpecialization, { isLoading: isUpdating }] =
+        useUpdateSpecializationByIdMutation();
+
     const [deleteSpecialization, { isLoading: isDeleting }] =
         useDeleteSpecializationByIdMutation();
+
+    const handleCreate = async (
+        values: SpecializationFormValues
+    ) => {
+        if (!values.image) {
+            return;
+        }
+
+        const specializationImage = await fileToBase64(
+            values.image
+        );
+
+        await createSpecialization({
+            title: values.title,
+            description: values.description,
+            imageSrc: "",
+            specializationImage,
+        }).unwrap();
+
+        navigate("/admin/specializations");
+    };
+
+    const handleUpdate = async (
+        values: SpecializationFormValues
+    ) => {
+        if (!specialization) {
+            return;
+        }
+
+        const specializationImage = values.image
+            ? await fileToBase64(values.image)
+            : "";
+
+        await updateSpecialization({
+            id: specialization.id,
+            body: {
+                title: values.title,
+                description: values.description,
+                imageSrc: specialization.imageSrc,
+                specializationImage,
+            },
+        }).unwrap();
+
+        setIsEditing(false);
+    };
 
     const handleDelete = async () => {
         if (!specialization) {
             return;
         }
 
-        await deleteSpecialization(specialization.id).unwrap();
+        await deleteSpecialization(
+            specialization.id
+        ).unwrap();
 
         navigate("/admin/specializations");
-    };
-
-    const handleEdit = () => {
-        setIsEditing(true);
-    };
-
-    const handleCancelEdit = () => {
-        setIsEditing(false);
     };
 
     if (
@@ -87,6 +141,34 @@ export function SpecializationDetailsPage({
         return <p>Специализация не найдена</p>;
     }
 
+    if (mode === "create") {
+        return (
+            <main>
+                <button
+                    type="button"
+                    onClick={() =>
+                        navigate(
+                            "/admin/specializations"
+                        )
+                    }
+                >
+                    Назад
+                </button>
+
+                <h1>Добавить специализацию</h1>
+
+                <SpecializationCreateFormPage
+                    submitText={
+                        isCreating
+                            ? "Создание..."
+                            : "Создать"
+                    }
+                    onSubmit={handleCreate}
+                />
+            </main>
+        );
+    }
+
     const specializationSkills =
         skillsData?.data ?? [];
 
@@ -102,36 +184,30 @@ export function SpecializationDetailsPage({
             </button>
 
             <h1>
-                {mode === "create"
-                    ? "Добавить специализацию"
-                    : isEditing
-                        ? "Редактирование специализации"
-                        : specialization?.title}
+                {isEditing
+                    ? "Редактирование специализации"
+                    : specialization!.title}
             </h1>
 
-            {mode === "create" ? (
+            {isEditing ? (
                 <SpecializationCreateFormPage
-                    submitText="Создать"
-                    onSubmit={(values) => {
-                        console.log(values);
+                    initialValues={{
+                        title: specialization!.title,
+                        description:
+                            specialization!.description,
+                        imageSrc:
+                            specialization!.imageSrc,
                     }}
-
+                    submitText={
+                        isUpdating
+                            ? "Сохранение..."
+                            : "Сохранить"
+                    }
+                    onSubmit={handleUpdate}
+                    onCancel={() =>
+                        setIsEditing(false)
+                    }
                 />
-            ) : isEditing ? (
-                <div>
-                    <SpecializationCreateFormPage
-                        initialValues={{
-                            title: specialization!.title,
-                            description: specialization!.description,
-                            imageSrc: specialization!.imageSrc,
-                        }}
-                        submitText="Сохранить"
-                        onSubmit={(values) => {
-                            console.log(values);
-                        }}
-                        onCancel={handleCancelEdit}
-                    />
-                </div>
             ) : (
                 <>
                     <div>
@@ -156,7 +232,8 @@ export function SpecializationDetailsPage({
                     <div>
                         <h2>Навыки</h2>
 
-                        {specializationSkills.length === 0 ? (
+                        {specializationSkills.length ===
+                            0 ? (
                             <p>Навыки не найдены</p>
                         ) : (
                             <ul>
@@ -173,12 +250,15 @@ export function SpecializationDetailsPage({
 
                     <div>
                         <p>
-                            Slug: {specialization!.slug}
+                            Slug:{" "}
+                            {specialization!.slug}
                         </p>
 
                         <p>
                             Автор:{" "}
-                            {specialization!.createdBy?.username ?? "Не указан"}
+                            {specialization!.createdBy
+                                ?.username ??
+                                "Не указан"}
                         </p>
 
                         <p>
@@ -195,7 +275,9 @@ export function SpecializationDetailsPage({
                     <div>
                         <button
                             type="button"
-                            onClick={handleEdit}
+                            onClick={() =>
+                                setIsEditing(true)
+                            }
                         >
                             Редактировать
                         </button>

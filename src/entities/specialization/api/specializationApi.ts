@@ -97,6 +97,19 @@ export const specializationApi = baseApi.injectEndpoints({
                 method: "DELETE",
             }),
         }),
+
+        uploadSpecializationImage: builder.mutation<
+            SpecializationResponse,
+            {
+                id: number;
+                body: unknown;
+            }
+        >({
+            query: ({ id }) => ({
+                url: `/specializations/${id}/image`,
+                method: "POST",
+            }),
+        }),
     }),
 });
 
@@ -106,4 +119,5 @@ export const {
     useCreateSpecializationMutation,
     useUpdateSpecializationByIdMutation,
     useDeleteSpecializationByIdMutation,
+    useUploadSpecializationImageMutation
 } = specializationApi;

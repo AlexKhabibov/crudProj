@@ -1,20 +1,17 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import type {
-    OnChangeFn,
-    RowSelectionState,
-} from "@tanstack/react-table";
-import type { Skill } from "@/entities/skill/model/types";
-import type { Specialization } from "@/entities/specialization/model/types";
 import {
     createColumnHelper,
     createSortedRowModel,
     rowSelectionFeature,
     rowSortingFeature,
-    sortFn_text,
     tableFeatures,
     useTable,
+    type OnChangeFn,
+    type RowSelectionState,
 } from "@tanstack/react-table";
+import type { Specialization } from "@/entities/specialization/model/types";
+import type { Skill } from "@/entities/skill/model/types";
 
 interface SpecializationsTableProps {
     specializations: Specialization[];
@@ -27,9 +24,6 @@ const features = tableFeatures({
     rowSelectionFeature,
     rowSortingFeature,
     sortedRowModel: createSortedRowModel(),
-    sortFns: {
-        text: sortFn_text,
-    },
 });
 
 const columnHelper = createColumnHelper<
@@ -54,86 +48,77 @@ export function SpecializationsTable({
             columnHelper.columns([
                 columnHelper.display({
                     id: "select",
-
                     header: ({ table }) => (
                         <input
                             type="checkbox"
-                            checked={table.getIsAllPageRowsSelected()}
+                            checked={table.getIsAllRowsSelected()}
                             ref={(element) => {
                                 if (element) {
                                     element.indeterminate =
-                                        table.getIsSomePageRowsSelected() &&
-                                        !table.getIsAllPageRowsSelected();
+                                        table.getIsSomeRowsSelected() &&
+                                        !table.getIsAllRowsSelected();
                                 }
                             }}
-                            onChange={table.getToggleAllPageRowsSelectedHandler()}
+                            onChange={table.getToggleAllRowsSelectedHandler()}
+                            onClick={(event) =>
+                                event.stopPropagation()
+                            }
                         />
                     ),
-
                     cell: ({ row }) => (
                         <input
                             type="checkbox"
                             checked={row.getIsSelected()}
                             disabled={!row.getCanSelect()}
                             onChange={row.getToggleSelectedHandler()}
+                            onClick={(event) =>
+                                event.stopPropagation()
+                            }
                         />
                     ),
                 }),
 
-                columnHelper.display({
+                columnHelper.accessor("imageSrc", {
                     id: "image",
-
                     header: "Изображение",
-
                     cell: ({ row }) => (
                         <img
                             src={row.original.imageSrc}
                             alt={row.original.title}
-                            width={50}
-                            height={50}
+                            width={48}
+                            height={48}
                         />
                     ),
                 }),
 
                 columnHelper.accessor("title", {
-                    header: ({ column }) => (
-                        <button
-                            type="button"
-                            onClick={column.getToggleSortingHandler()}
-                        >
-                            Название{" "}
-                            {column.getIsSorted() === "asc" && "↑"}
-                            {column.getIsSorted() === "desc" && "↓"}
-                        </button>
-                    ),
-
-                    cell: (info) => info.getValue(),
-
-                    sortFn: "text",
+                    header: "Название",
+                    cell: ({ getValue }) => getValue(),
                 }),
 
                 columnHelper.accessor("description", {
                     header: "Описание",
-                    cell: (info) => info.getValue(),
-                    enableSorting: false,
+                    cell: ({ getValue }) => getValue(),
                 }),
 
                 columnHelper.display({
                     id: "skills",
-
                     header: "Навыки",
-
                     cell: ({ row }) => {
-                        const specializationId = row.original.id;
-
-                        return skills
-                            .filter((skill) =>
+                        const specializationSkills =
+                            skills.filter((skill) =>
                                 skill.specializations.some(
-                                    (skillSpecialization) =>
-                                        skillSpecialization.id ===
-                                        specializationId
+                                    (specialization) =>
+                                        specialization.id ===
+                                        row.original.id
                                 )
-                            )
+                            );
+
+                        if (specializationSkills.length === 0) {
+                            return "—";
+                        }
+
+                        return specializationSkills
                             .map((skill) => skill.title)
                             .join(", ");
                     },
@@ -141,11 +126,11 @@ export function SpecializationsTable({
 
                 columnHelper.display({
                     id: "options",
-
-                    header: "Опции",
-
+                    header: "",
                     cell: ({ row }) => {
-                        const specializationId = row.original.id;
+                        const specializationId =
+                            row.original.id;
+
                         const isOpen =
                             openMenuId === specializationId;
 
@@ -153,7 +138,9 @@ export function SpecializationsTable({
                             <div>
                                 <button
                                     type="button"
-                                    onClick={() => {
+                                    onClick={(event) => {
+                                        event.stopPropagation();
+
                                         setOpenMenuId(
                                             isOpen
                                                 ? null
@@ -165,16 +152,22 @@ export function SpecializationsTable({
                                 </button>
 
                                 {isOpen && (
-                                    <div>
+                                    <div
+                                        onClick={(event) =>
+                                            event.stopPropagation()
+                                        }
+                                    >
                                         <button
                                             type="button"
                                             onClick={() => {
+                                                setOpenMenuId(null);
+
                                                 navigate(
                                                     `/admin/specializations/${specializationId}`
                                                 );
                                             }}
                                         >
-                                            Редактировать
+                                            Открыть
                                         </button>
                                     </div>
                                 )}
@@ -183,24 +176,19 @@ export function SpecializationsTable({
                     },
                 }),
             ]),
-        [skills, navigate, openMenuId]
+        [navigate, openMenuId, skills]
     );
 
     const table = useTable({
         features,
         data: specializations,
         columns,
-
         getRowId: (row) => String(row.id),
-
         enableRowSelection: true,
-
         state: {
             rowSelection,
         },
-
         onRowSelectionChange,
-
         enableSortingRemoval: false,
     });
 
@@ -226,7 +214,17 @@ export function SpecializationsTable({
 
             <tbody>
                 {table.getRowModel().rows.map((row) => (
-                    <tr key={row.id}>
+                    <tr
+                        key={row.id}
+                        onClick={() =>
+                            navigate(
+                                `/admin/specializations/${row.original.id}`
+                            )
+                        }
+                        style={{
+                            cursor: "pointer",
+                        }}
+                    >
                         {row.getAllCells().map((cell) => (
                             <td key={cell.id}>
                                 <table.FlexRender

@@ -1,4 +1,6 @@
-export function fileToBase64(file: File): Promise<string> {
+export function fileToBase64(
+    file: File
+): Promise<string> {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
 
@@ -7,9 +9,10 @@ export function fileToBase64(file: File): Promise<string> {
 
             if (typeof result !== "string") {
                 reject(
-                    new Error("Не удалось прочитать файл")
+                    new Error(
+                        "Не удалось прочитать файл"
+                    )
                 );
-
                 return;
             }
 
@@ -17,9 +20,10 @@ export function fileToBase64(file: File): Promise<string> {
 
             if (!base64) {
                 reject(
-                    new Error("Не удалось получить Base64")
+                    new Error(
+                        "Не удалось получить Base64"
+                    )
                 );
-
                 return;
             }
 
